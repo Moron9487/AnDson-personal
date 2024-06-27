@@ -1,0 +1,58 @@
+第一個AnDson格式版本
+
+
+Animes-json {
+	"_edition": "AnDson Personal",
+    "_version": [1,0,0],
+    "_last_anime_id: int,
+	animes: {Anime-id: Anime-object},
+}
+
+Anime-object {
+	"_class": "Anime",
+	"title": str,
+	"aliases": [str],
+	"tags": [str],
+    "_last_view_id": int,
+	"views": {View-id: View-object},
+}
+
+View-object {
+	"_class": "View",
+	"title": str,
+	"is_new": bool,
+	"times_view": int
+	"source": str,
+	"view_record": View-record-object,
+	"Ranking": [Ranking-object],
+	"Comment": markdown-str,
+}
+
+View-record-object {
+	"_class": "View Record"
+	"episode_range": [str],
+	"view_duration": [month-str],
+	"last_episode_date": date-str,
+}
+
+Ranking-object {
+	"_class": "Ranking object",
+	"item": str,
+	"score_format": str,
+	"score": ?
+}
+
+date-str: yyyy-mm-dd
+month-str: yyyy-mm
+
+score_formats:
+	5 -> 0,1,2,3,4,5
+	10 -> 0,1,2,3,4,5,6,7,8,9,10
+	10+ -> (0,"a"), (1,"a"), (2,"a"), 
+			(3,"a"), (3,"b"), 
+			(4,"a"), (4,"b"), (4,"c"), 
+			(5,"a"), (5,"b"), (5,"c"),
+			(6,"a"), (6,"b"), (6,"c"),
+			(7,"a"), (7,"b"), 
+			(8,"a"), (8,"b"), 
+			(9,"a"), (10,"a"), 
