@@ -1,13 +1,11 @@
-將_last_anime_id與_last_view_id移入animes與views
-
+第一個AnDson格式版本
 
 
 Animes-json {
 	"_edition": "AnDson Personal",
-    "_version": [2,0,0],
-	animes: {"_last_anime_id: int, 
-			 "_anime_objects": {Anime-id: Anime-object}
-			 },
+    "_version": [1,1,0,0],
+    "_last_anime_id: int,
+	animes: {Anime-id: Anime-object},
 }
 
 Anime-object {
@@ -15,18 +13,17 @@ Anime-object {
 	"title": str,
 	"aliases": [str],
 	"tags": [str],
-	"views": {"_last_view_id": int,
-			  "_view_objects": {View-id: View-object}
-			  },
+    "_last_view_id": int,
+	"views": {View-id: View-object},
 }
 
 View-object {
 	"_class": "View",
 	"title": str,
 	"is_new": bool,
-	"times_view": int,
+	"times_view": int
 	"source": str,
-	"view_record": View-record-object | View-record-object+,
+	"view_record": View-record-object,
 	"Ranking": [Ranking-object],
 	"Comment": markdown-str,
 }
@@ -36,11 +33,6 @@ View-record-object {
 	"episode_range": [str],
 	"view_duration": [month-str],
 	"last_episode_date": date-str,
-}
-
-View-record-object+ {
-    "_class": "View Record v2",
-    "episodes": {episode-name: date-str}
 }
 
 Ranking-object {

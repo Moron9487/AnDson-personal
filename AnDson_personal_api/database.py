@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 import json
 
-
 from .anime import Anime
 from .exceptions import RepeatedAnimeTitleError, WrongDatabaseError
 
@@ -11,14 +10,15 @@ from .exceptions import RepeatedAnimeTitleError, WrongDatabaseError
 def _version_check(raw_dict: dict):  # To be complete in the future
     if raw_dict["_edition"] != "AnDson Personal":
         raise WrongDatabaseError("the api not support the given AnDson edition")
+
     if raw_dict["_version"][0] != 1 or raw_dict["_version"][1] > 0 or raw_dict["_version"][2] > 0:
         raise WrongDatabaseError("the api not support the given AnDson version")
 
 def _get_anime_name_catalog(raw_dict:dict) -> dict:
     # user will search anime object with title or alias instead of id
     anime_name_catalog = {}
-    for anime_id in raw_dict["animes"]:  #{anime-title | anime-alias: anime-id}
-        anime = raw_dict["animes"][anime_id]
+    for anime_id in raw_dict["animes"]["_anime_objects"]:  #{anime-title | anime-alias: anime-id}
+        anime = raw_dict["animes"]["_anime_objects"][anime_id]
 
         title = anime["title"]
         anime_name_catalog[title] = anime_id
@@ -50,20 +50,22 @@ class Database:
             raw_dict = {
                 "_edition": "AnDson Personal",
                 "_version": [1,0,0],
-                "_last_anime_id": 0,
-                "animes":{}}
+                "animes":{"_last_anime_id": 0,
+                          "_anime_objects":{}}}
         else:
             raw_dict = _load_AnDson(file_path)
         self._raw_dict = raw_dict
         self.anime_name_catalog = _get_anime_name_catalog(self._raw_dict)
 
+
     @property
     def _last_anime_id(self):  #database.last_anime_id is actually a value in raw dict
-        return self._raw_dict["_last_anime_id"]
+        return self._raw_dict["animes"]["_last_anime_id"]
 
     @_last_anime_id.setter
     def _last_anime_id(self, new_value):
-        self._raw_dict["_last_anime_id"] = new_value
+        self._raw_dict["animes"]["_last_anime_id"] = new_value
+
 
     def save_AnDson(self, file_path:str) -> None:
         """
@@ -74,8 +76,13 @@ class Database:
         json_file.close()
         return None
 
-    def create_anime(self, title:str, aliases:tuple[str], tags:tuple[str]) -> Anime:
-        
+
+    def create_anime(self, title:str, aliases:tuple[str]=(), tags:tuple[str]=()) -> Anime:
+        """
+        `title`: The title of the anime, it must be a string.\n
+        `aliases`: A tuple of aliases of the anime, each of the alias should be a string.\n
+        `tags`: A tuple of tags of the anime, each of the tag should be a string.
+        """
         # Checking datatype of args
         if not isinstance(title, str):
             raise TypeError("title must be a string")
@@ -111,10 +118,10 @@ class Database:
             "title": title,
             "aliases": list(aliases),
             "tags": list(tags),
-            "_last_view_id": 0,
-            "views": None,}
+            "views": {"_last_view_id": 0,
+                      "_view_objects": {}}}
         self._last_anime_id += 1
-        self._raw_dict["animes"][self._last_anime_id] = new_anime_object
+        self._raw_dict["animes"]["_anime_objects"][self._last_anime_id] = new_anime_object
 
         # Register anime title and aliases to the anime_name_catalog
         self.anime_name_catalog[title] = self._last_anime_id
@@ -126,18 +133,25 @@ class Database:
 
     def get_anime(self, name:str) -> Anime|None:
         """
-        "name" can be title or alias
+        "name" can be title or alias \n
         Returns an Anime instance if the name is in the database, otherwise, returns None.
         """
         if name in self.anime_name_catalog:
             return Anime(self, self.anime_name_catalog[name])
         else:
             return None
-        
+
+    def get_all_animes(self) -> tuple[Anime]:
+        """
+        Returns a tuple of all animes in the database
+        """
+        rtn = tuple(Anime(self,anime_id) for anime_id in self._raw_dict["animes"]["_anime_objects"])
+        return rtn
+
     def clear_anime(self) -> None:
         """
         remove all anime data in the Database object.
         """
         # hint: last_anime_id will not reset.
         self.anime_name_catalog = {}
-        self._raw_dict["animes"] = {}
+        self._raw_dict["animes"]["_anime_objects"] = {}
